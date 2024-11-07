@@ -1,25 +1,38 @@
-# pygame template
-
 import pygame
-
 
 pygame.init()
 
+# Screen dimensions
 WIDTH = 1000
-HEIGHT = 1000
+HEIGHT = 900
 SIZE = (WIDTH, HEIGHT)
 
+# Set up the screen and clock
 screen = pygame.display.set_mode(SIZE)
 clock = pygame.time.Clock()
 
+# Colors
+RED = (255, 0, 0)     
+GREEN = (0, 255, 0) 
+BROWN = (139, 69, 19) 
+
 # ---------------------------
 # Initialize global variables
+Score = 0
 
-circle_x = 200
-circle_y = 200
+# Position of the apple
+apple_x = WIDTH // 2  
+apple_y = HEIGHT // 2  
+
+# Function to draw the apple
+def apple():
+    pygame.draw.ellipse(screen, GREEN, (apple_x-20, apple_y-25, 20, 10))  # Leaf
+    pygame.draw.circle(screen, RED, (apple_x, apple_y), 20)  # Apple body
+    pygame.draw.rect(screen, BROWN, (apple_x-2, apple_y-25, 5, 10))  # Stem
+
 
 # ---------------------------
-
+# Game loop
 running = True
 while running:
     # EVENT HANDLING
@@ -31,15 +44,14 @@ while running:
     # All game math and comparisons happen here
 
     # DRAWING
-    screen.fill((191, 240, 0))  # always the first drawing command
+    screen.fill((191, 240, 0))  # Fill the screen with a light green background
 
-    pygame.draw.circle(screen, (0, 0, 255), (circle_x, circle_y), 30)
+    # Draw the apple
+    apple()
 
-    # Must be the last two lines
-    # of the game loop
-    pygame.display.flip()
-    clock.tick(30)
+    # Must be the last two lines of the game loop
+    pygame.display.flip()  # Update the display
+    clock.tick(30)  # Set the frame rate to 30 FPS
     #---------------------------
-
 
 pygame.quit()
