@@ -1,4 +1,5 @@
 import pygame
+import random
 
 pygame.init()
 
@@ -12,24 +13,33 @@ screen = pygame.display.set_mode(SIZE)
 clock = pygame.time.Clock()
 
 # Colors
-RED = (255, 0, 0)     
-GREEN = (0, 255, 0) 
-BROWN = (139, 69, 19) 
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BROWN = (139, 69, 19)
 
 # ---------------------------
 # Initialize global variables
 Score = 0
 
-# Position of the apple
-apple_x = WIDTH // 2  
-apple_y = HEIGHT // 2  
+# Position of the apple (centered apple for testing)
+apple_x = WIDTH // 2  # Centered horizontally
+apple_y = HEIGHT // 2  # Centered vertically
 
-# Function to draw the apple
-def apple():
-    pygame.draw.ellipse(screen, GREEN, (apple_x-20, apple_y-25, 20, 10))  # Leaf
-    pygame.draw.circle(screen, RED, (apple_x, apple_y), 20)  # Apple body
-    pygame.draw.rect(screen, BROWN, (apple_x-2, apple_y-25, 5, 10))  # Stem
+# List to store random apple positions
+apple_positions = []
 
+# Function to draw an apple at a specific position
+def apple(x, y):
+    pygame.draw.ellipse(screen, GREEN, (x-20, y-25, 20, 10))  # Leaf
+    pygame.draw.circle(screen, RED, (x, y), 20)  # Apple body
+    pygame.draw.rect(screen, BROWN, (x-2, y-25, 5, 10))  # Stem
+
+# Generate random positions for 6 apples
+for i in range(5):
+    # Random position for each apple, ensuring it stays within screen bounds
+    x_pos = random.randint(0 + 20, WIDTH - 20)  # Apple radius is 20, so avoid edges
+    y_pos = random.randint(0 + 20, HEIGHT - 20)  # Same for vertical edge
+    apple_positions.append((x_pos, y_pos))
 
 # ---------------------------
 # Game loop
@@ -41,17 +51,17 @@ while running:
             running = False
 
     # GAME STATE UPDATES
-    # All game math and comparisons happen here
+    # All game math and comparisons happen here (none needed for apple positions)
 
     # DRAWING
     screen.fill((191, 240, 0))  # Fill the screen with a light green background
 
-    # Draw the apple
-    apple()
+    # Draw all apples at the stored positions
+    for pos in apple_positions:
+        apple(pos[0], pos[1])
 
     # Must be the last two lines of the game loop
     pygame.display.flip()  # Update the display
     clock.tick(30)  # Set the frame rate to 30 FPS
-    #---------------------------
 
 pygame.quit()
