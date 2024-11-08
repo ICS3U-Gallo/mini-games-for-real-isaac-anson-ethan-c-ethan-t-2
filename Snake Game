@@ -34,7 +34,7 @@ def apple(x, y):
     pygame.draw.circle(screen, RED, (x, y), 20)  # Apple body
     pygame.draw.rect(screen, BROWN, (x-2, y-25, 5, 10))  # Stem
 
-# Generate random positions for 6 apples
+# Generate random positions for 5 apples
 for i in range(5):
     # Random position for each apple, ensuring it stays within screen bounds
     x_pos = random.randint(0 + 20, WIDTH - 20)  # Apple radius is 20, so avoid edges
