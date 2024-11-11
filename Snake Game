@@ -5,17 +5,21 @@ pygame.init()
 
 # Screen dimensions
 WIDTH = 1000
-HEIGHT = 900
+HEIGHT = 800
 SIZE = (WIDTH, HEIGHT)
 
 # Set up the screen and clock
 screen = pygame.display.set_mode(SIZE)
 clock = pygame.time.Clock()
+pygame.display.set_caption('Snake Game')
 
 # Colors
 RED = (255, 0, 0)
-GREEN = (0, 255, 0)
+GREEN = (0, 255, 100)
 BROWN = (139, 69, 19)
+WHITE = (255, 255, 255)
+YELLOW = (255, 255, 102)
+BLACK = (0, 0, 0)
 
 # ---------------------------
 # Initialize global variables
@@ -28,11 +32,27 @@ apple_y = HEIGHT // 2  # Centered vertically
 # List to store random apple positions
 apple_positions = []
 
+# Snake positions
+snake_block = 50
+snake_radius = snake_block // 2
+snake_speed = 15
+snake_list = [(100, 100), (60, 100), (20, 100)]  # Initial snake body
+x_change = snake_block
+y_change = 0
+
+# Score Display Font
+font = pygame.font.SysFont("RussoOne", 30)
+
 # Function to draw an apple at a specific position
 def apple(x, y):
-    pygame.draw.ellipse(screen, GREEN, (x-20, y-25, 20, 10))  # Leaf
+    pygame.draw.ellipse(screen, GREEN, (x - 20, y - 25, 20, 10))  # Leaf
     pygame.draw.circle(screen, RED, (x, y), 20)  # Apple body
-    pygame.draw.rect(screen, BROWN, (x-2, y-25, 5, 10))  # Stem
+    pygame.draw.rect(screen, BROWN, (x - 2, y - 25, 5, 10))  # Stem
+
+# Function to draw the snake
+def snake(snake_radius, snake_list, screen, GREEN):
+    for segment in snake_list:
+        pygame.draw.circle(screen, GREEN, (segment[0], segment[1]), snake_radius)
 
 # Generate random positions for 5 apples
 for i in range(5):
@@ -51,17 +71,26 @@ while running:
             running = False
 
     # GAME STATE UPDATES
-    # All game math and comparisons happen here (none needed for apple positions)
+    # Update the score text dynamically
+    score_text = f"Score: {Score}"
+    text_surface = font.render(score_text, True, BLACK)  # Render the score as a white text
+    text_rect = text_surface.get_rect(center=(WIDTH // 2, 30))  # Center the score text at the top
 
     # DRAWING
     screen.fill((191, 240, 0))  # Fill the screen with a light green background
+
+    # Draw the snake
+    snake(snake_radius, snake_list, screen, GREEN)
 
     # Draw all apples at the stored positions
     for pos in apple_positions:
         apple(pos[0], pos[1])
 
-    # Must be the last two lines of the game loop
-    pygame.display.flip()  # Update the display
+    # Display the score
+    screen.blit(text_surface, text_rect)
+
+    # Update the display
+    pygame.display.flip()  # Update the screen with new changes
     clock.tick(30)  # Set the frame rate to 30 FPS
 
 pygame.quit()
