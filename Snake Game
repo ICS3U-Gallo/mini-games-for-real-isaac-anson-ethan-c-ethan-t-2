@@ -11,55 +11,56 @@ SIZE = (WIDTH, HEIGHT)
 # Set up the screen and clock
 screen = pygame.display.set_mode(SIZE)
 clock = pygame.time.Clock()
-pygame.display.set_caption('Snake Game')
+pygame.display.set_caption('Shark Game')
 
 # Colors
 RED = (255, 0, 0)
-GREEN = (0, 255, 100)
-BROWN = (139, 69, 19)
 WHITE = (255, 255, 255)
 YELLOW = (255, 255, 102)
 BLACK = (0, 0, 0)
+SEABLUE = (0,122,165)
+GRAY = (169, 169, 169)
+DARK_GRAY = (105, 105, 105)
+BLUE = (0, 0, 255)
+ORANGE = (255, 165, 0)
+LIGHT_BLUE = (173, 216, 230)
 
 # ---------------------------
 # Initialize global variables
 Score = 0
 
-# Position of the apple (centered apple for testing)
-apple_x = WIDTH // 2  # Centered horizontally
-apple_y = HEIGHT // 2  # Centered vertically
+# List to store random fish positions
+fish_positions = []
 
-# List to store random apple positions
-apple_positions = []
-
-# Snake positions
-snake_block = 50
-snake_radius = snake_block // 2
-snake_speed = 15
-snake_list = [(100, 100), (60, 100), (20, 100)]  # Initial snake body
-x_change = snake_block
-y_change = 0
 
 # Score Display Font
 font = pygame.font.SysFont("RussoOne", 30)
 
-# Function to draw an apple at a specific position
-def apple(x, y):
-    pygame.draw.ellipse(screen, GREEN, (x - 20, y - 25, 20, 10))  # Leaf
-    pygame.draw.circle(screen, RED, (x, y), 20)  # Apple body
-    pygame.draw.rect(screen, BROWN, (x - 2, y - 25, 5, 10))  # Stem
+# Function to draw the shark
+def draw_shark():
+    pygame.draw.ellipse(screen, GRAY, (250, 300, 200, 75))
+    tail_points = [(250, 325), (150, 275), (150, 375)]
+    pygame.draw.polygon(screen, DARK_GRAY, tail_points)
+    fin_points = [(350, 260), (430, 150), (500, 260)]
+    pygame.draw.polygon(screen, DARK_GRAY, fin_points)
+    pygame.draw.circle(screen, BLACK, (450, 300), 5)
+    pygame.draw.arc(screen, BLACK, (350, 350, 50, 25), 3.14, 0, 3)
 
-# Function to draw the snake
-def snake(snake_radius, snake_list, screen, GREEN):
-    for segment in snake_list:
-        pygame.draw.circle(screen, GREEN, (segment[0], segment[1]), snake_radius)
+# Function to draw a fish
+def fish(x, y):
+    pygame.draw.ellipse(screen, LIGHT_BLUE, (x, y, 50, 25))
+    tail_points = [(x, y + 12), (x - 15, y), (x - 15, y + 25)]
+    pygame.draw.polygon(screen, ORANGE, tail_points)
+    pygame.draw.circle(screen, BLACK, (x + 35, y + 7), 3)
+    pygame.draw.arc(screen, BLACK, (x + 27, y + 15, 10, 5), 3.14, 0, 3)
 
-# Generate random positions for 5 apples
+
+# Generate random positions for fishes
 for i in range(5):
-    # Random position for each apple, ensuring it stays within screen bounds
-    x_pos = random.randint(0 + 20, WIDTH - 20)  # Apple radius is 20, so avoid edges
+    # Random position for each fish, ensuring it stays within screen bounds
+    x_pos = random.randint(0 + 20, WIDTH - 20)  # fish radius is 20, so avoid edges
     y_pos = random.randint(0 + 20, HEIGHT - 20)  # Same for vertical edge
-    apple_positions.append((x_pos, y_pos))
+    fish_positions.append((x_pos, y_pos))
 
 # ---------------------------
 # Game loop
@@ -70,27 +71,30 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    # GAME STATE UPDATES
+
+
+
     # Update the score text dynamically
     score_text = f"Score: {Score}"
     text_surface = font.render(score_text, True, BLACK)  # Render the score as a white text
     text_rect = text_surface.get_rect(center=(WIDTH // 2, 30))  # Center the score text at the top
 
     # DRAWING
-    screen.fill((191, 240, 0))  # Fill the screen with a light green background
+    screen.fill(SEABLUE)  # Fill the screen with a light green background
 
-    # Draw the snake
-    snake(snake_radius, snake_list, screen, GREEN)
 
-    # Draw all apples at the stored positions
-    for pos in apple_positions:
-        apple(pos[0], pos[1])
 
+    # Draw all fishes at the stored positions
+    for pos in fish_positions:
+        fish(pos[0], pos[1])
+
+    #draw shark
+    draw_shark()
     # Display the score
     screen.blit(text_surface, text_rect)
 
     # Update the display
     pygame.display.flip()  # Update the screen with new changes
-    clock.tick(30)  # Set the frame rate to 30 FPS
+    clock.tick(15)  # Set the frame rate to 15 FPS for smoother movement
 
 pygame.quit()
