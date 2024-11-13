@@ -1,0 +1,198 @@
+import pygame
+import random
+import math 
+
+pygame.init()
+
+#Dimensions
+WIDTH = 1000
+HEIGHT = 800
+SIZE = (WIDTH, HEIGHT)
+
+screen = pygame.display.set_mode(SIZE)
+clock = pygame.time.Clock()
+pygame.display.set_caption('Shark Game')
+
+#Colors
+RED = (255, 0, 0)
+WHITE = (255, 255, 255)
+YELLOW = (255, 255, 102)
+BLACK = (0, 0, 0)
+SEABLUE = (0, 122, 165)
+GRAY = (169, 169, 169)
+DARK_GRAY = (105, 105, 105)
+BLUE = (0, 0, 255)
+ORANGE = (255, 165, 0)
+LIGHT_BLUE = (173, 216, 230)
+
+#---------------------------
+#Initialize global variables
+Score = 0
+
+#List to store regular fish and poison fish positions
+fish_positions = []
+poisonfish_positions = []
+shark_x = 100
+shark_y = 100
+
+#Score Display Font
+font = pygame.font.SysFont("RussoOne", 30)
+
+#Function to draw a regular fish
+def fish(x, y):
+    pygame.draw.ellipse(screen, LIGHT_BLUE, (x, y, 50, 25))
+    tail_points = [(x, y + 12), (x - 15, y), (x - 15, y + 25)]
+    pygame.draw.polygon(screen, ORANGE, tail_points)
+    pygame.draw.circle(screen, BLACK, (x + 35, y + 7), 3)
+    pygame.draw.arc(screen, BLACK, (x + 27, y + 15, 10, 5), 3.14, 0, 3)
+
+#Function to draw a poison fish
+def poison_fish(x, y):
+    pygame.draw.ellipse(screen, RED, (x, y, 50, 25))
+    tail_points = [(x, y + 12), (x - 15, y), (x - 15, y + 25)]
+    pygame.draw.polygon(screen, ORANGE, tail_points)
+    pygame.draw.circle(screen, BLACK, (x + 35, y + 7), 3)
+    pygame.draw.arc(screen, BLACK, (x + 27, y + 15, 10, 5), 3.14, 0, 3)
+
+
+#Generate Random Positions for fish
+for i in range(4): 
+    x_pos = random.randint(0 + 20, WIDTH - 20)
+    y_pos = random.randint(0 + 20, HEIGHT - 20)
+    fish_positions.append((x_pos, y_pos))
+
+#Generate Random Positions for poison fish
+for i in range(2): 
+    x_pos = random.randint(0 + 20, WIDTH - 20)
+    y_pos = random.randint(0 + 20, HEIGHT - 20)
+    poisonfish_positions.append((x_pos, y_pos))
+
+
+# ---------------------------
+# Function to display the game over screen
+def game_over_screen():
+    font = pygame.font.SysFont("RussoOne", 50)
+    message = "You Lost! Press C to Play Again or Q to Quit"
+    text_surface = font.render(message, True, WHITE)
+    text_rect = text_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    screen.blit(text_surface, text_rect)
+    pygame.display.update()
+
+#Function to reset the game
+def reset_game():
+    global shark_x, shark_y, Score, fish_positions, poisonfish_positions
+    shark_x = 100
+    shark_y = 100
+    Score = 0
+    fish_positions = []
+    poisonfish_positions = []
+
+    #Generate random positions for regular fish and poison fish
+    for i in range(4):
+        x_pos = random.randint(0 + 20, WIDTH - 20)
+        y_pos = random.randint(0 + 20, HEIGHT - 20)
+        fish_positions.append((x_pos, y_pos))
+
+    for i in range(2):
+        x_pos = random.randint(0 + 20, WIDTH - 20)
+        y_pos = random.randint(0 + 20, HEIGHT - 20)
+        poisonfish_positions.append((x_pos, y_pos))
+
+
+#---------------------------
+#Main game loop
+def game_loop():
+    global shark_x, shark_y, Score, fish_positions, poisonfish_positions
+    running = True
+    game_over = False
+
+    #Shark movement speed and direction
+    shark_speed = 10
+    x1_change = shark_speed
+    y1_change = 0
+
+    while running:
+        #EVENT HANDLING
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        #Movement
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            x1_change = -shark_speed
+            y1_change = 0
+        if keys[pygame.K_RIGHT]:
+            x1_change = shark_speed
+            y1_change = 0
+        if keys[pygame.K_UP]:
+            y1_change = -shark_speed
+            x1_change = 0
+        if keys[pygame.K_DOWN]:
+            y1_change = shark_speed
+            x1_change = 0
+
+        # Update shark position
+        shark_x += x1_change
+        shark_y += y1_change
+
+        #Check for collision with any regular fish
+        for fish_x, fish_y in fish_positions[:]:
+            distance = math.sqrt((shark_x - fish_x) ** 2 + (shark_y - fish_y) ** 2)
+            if distance < 200:  # Collision with regular fish
+                Score += 10
+                fish_positions.remove((fish_x, fish_y))  # Remove fish
+                break  
+
+        #Shark Touches a poison fish
+        for poison_x, poison_y in poisonfish_positions[:]:
+            distance = math.sqrt((shark_x - poison_x) ** 2 + (shark_y - poison_y) ** 2)
+            if distance < 100:  # Collision with poison fish
+                game_over = True  
+                break  
+
+        #Shark hits the border
+        if shark_x < 0 or shark_x + 200 > WIDTH or shark_y < 0 or shark_y + 70 > HEIGHT:
+            game_over = True  
+        #Update Score
+        score_text = f"Score: {Score}"
+        text_surface = font.render(score_text, True, BLACK)
+        text_rect = text_surface.get_rect(center=(WIDTH // 2, 30))
+
+        #DRAWING
+        screen.fill(SEABLUE)
+
+        # Load the shark image
+        shark = pygame.image.load("shark-clipart.png")
+        shark = pygame.transform.scale(shark, (200, 70))
+        screen.blit(shark, (shark_x, shark_y))
+
+        #Draw all fishes at the stored positions
+        for pos in fish_positions:
+            fish(pos[0], pos[1])
+
+        #Draw poison fishes
+        for pos in poisonfish_positions:
+            poison_fish(pos[0], pos[1])
+
+        #Display the score
+        screen.blit(text_surface, text_rect)
+
+        #Game over display
+        if game_over:
+            game_over_screen()
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_q]:
+                running = False  # Quit the game if Q is pressed
+            if keys[pygame.K_c]:
+                reset_game()  # Reset the game if C is pressed
+                game_over = False  
+
+        #Update the display
+        pygame.display.flip()
+        clock.tick(15)
+
+    pygame.quit()
+
+#Start the game loop
+game_loop()
