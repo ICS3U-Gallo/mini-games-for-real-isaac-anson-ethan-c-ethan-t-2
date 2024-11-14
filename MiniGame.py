@@ -3,9 +3,9 @@ import random
 
 pygame.init()
 
-WIDTH, HEIGHT = 640, 480
-TILE_SIZE = 16
-MAXWIDTH, MAXHEIGHT = 1280, 960
+WIDTH, HEIGHT = 960, 720
+TILE_SIZE = 24
+MAXWIDTH, MAXHEIGHT = 1920 , 1440 
 encounter = 0.1
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
@@ -19,7 +19,7 @@ battle_options = "attack", "switch","catch", "run",
 running = True
 selected_switch = 0
 selected = 0  # Track the currently selected Pokémon in the menu
-selected_move = 0# Track the currently selected move in battle
+selected_move = 0 # Track the currently selected move in battle
 selected_option = 0
 in_option = True
 in_attack = False
@@ -244,7 +244,8 @@ class Player:
         self.speed = TILE_SIZE  
         self.move_delay = 150
         self.last_move = pygame.time.get_ticks()
-
+        self.image = pygame.image.load("miku_image")
+        self.image = pygame.transform.scale(self.image, (TILE_SIZE, TILE_SIZE))  
     def move(self, dx, dy, barriers):
         time_now = pygame.time.get_ticks()
         if time_now - self.last_move >= self.move_delay:
@@ -261,7 +262,11 @@ class Player:
                     camera_rect.y = max(camera_rect.y - self.speed, 0)
             self.last_move = time_now
         return camera_rect
-
+    def draw_player(self, screen, camera_rect):
+        # Calculate the player's position relative to the camera
+        draw_position = (self.rect.x - camera_rect.x, self.rect.y - camera_rect.y)
+        # Draw the player image at the adjusted position
+        screen.blit(self.image, draw_position)
     def getposx(self):
         return self.rect.x
 
@@ -316,14 +321,17 @@ while running:
     if keys[pygame.K_m]:
         menu = True
 
-    screen.fill((255, 255, 255))
+    screen.fill((118, 198, 161))
 
     # Draw player and barriers
     player_on_screen = player.rect.move(-camera_rect.x, -camera_rect.y)
-    pygame.draw.rect(screen, (0, 0, 255), player_on_screen)
+    
+    player.draw_player(screen,camera_rect)
+    tree_image = pygame.image.load("tree_image.png")
+    tree_image = pygame.transform.scale(tree_image, (TILE_SIZE, TILE_SIZE))
     for barrier in barriers:
         barrier_on_screen = barrier.move(-camera_rect.x, -camera_rect.y)
-        pygame.draw.rect(screen, (255, 0, 0), barrier_on_screen)
+        screen.blit(tree_image, barrier_on_screen)
 
     for heal_tile in heal_tiles:
         heal_on_screen = heal_tile.move(-camera_rect.x, -camera_rect.y)
@@ -331,7 +339,7 @@ while running:
         if in_heal == False:
             if player.rect.colliderect(heal_tile):
                 for pokemon in team:
-                    font = pygame.font.Font(None, 24)
+                    font = pygame.font.Font(None, 72)
                     pokemon.full_recovery()
                     screen.fill((255,255,255))
                     text = font.render("Team healed fully!", True, (255, 0, 0))
@@ -341,12 +349,18 @@ while running:
                     pygame.time.delay(1000)
     in_heal = any(player.rect.colliderect(heal_tile) for heal_tile in heal_tiles)
 
+    grass_image = pygame.image.load("grass_image.jpeg")
+    grass_image = pygame.transform.scale(grass_image, (TILE_SIZE, TILE_SIZE))
     for grass_tile in grass:
+    # Adjust grass tile position relative to camera
         grass_on_screen = grass_tile.move(-camera_rect.x, -camera_rect.y)
-        pygame.draw.rect(screen, (0, 255, 0), grass_on_screen)
-        if in_grass == False:
-            if player.rect.colliderect(grass_tile) and whole_team_fainted(team) == False:
+        # Draw the grass image at the adjusted position
+        screen.blit(grass_image, grass_on_screen)
+        # Check for player collision with grass tile to start battle
+        if not in_grass:
+            if player.rect.colliderect(grass_tile) and not whole_team_fainted(team):
                 battle = True
+    # Update in_grass status for any collision with grass tiles
     in_grass = any(player.rect.colliderect(grass_tile) for grass_tile in grass)
     #Menu function
     while menu:
@@ -472,21 +486,19 @@ while running:
         enemy_last_move_text = font.render("Used:" + enemy_pokemon.last_move, True, (0, 0, 0))
         screen.blit(enemy_last_move_text, (50, 130))
 
-        pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(450, 300, 100, 10))  # Player HP bar border
-        pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(450, 300, int(100 * player_pokemon.current_hp / player_pokemon.max_hp), 10))
+        pygame.draw.rect(screen, (255, 0, 0), pygame.Rect(650, 500, 100, 10))  # Player HP bar border
+        pygame.draw.rect(screen, (0, 255, 0), pygame.Rect(650, 500, int(100 * player_pokemon.current_hp / player_pokemon.max_hp), 10))
         player_text = font.render("Your: " + player_pokemon.name + " Lv " + str(player_pokemon.level), True, (0, 0, 0))
-        screen.blit(player_text, (450, 270))
+        screen.blit(player_text, (650, 470))
         status_text = font.render("status:" + player_pokemon.status , True, (0, 0, 0))
-        screen.blit(status_text, (555, 298))
-        enemy_text = font.render("Enemy: " + enemy_pokemon.name + " Lv " + str(enemy_pokemon.level), True, (0, 0, 0))
-        screen.blit(enemy_text, (50, 70))
+        screen.blit(status_text, (755, 498))
         last_move_text = font.render("Used:" + player_pokemon.last_move, True, (0, 0, 0))
-        screen.blit(last_move_text, (450, 330))
+        screen.blit(last_move_text, (650, 530))
         if player_pokemon.charging:
             player_pokemon.attack(enemy_pokemon," ")
             player_pokemon.charging = False
         if in_option:
-            y_offset = 300
+            y_offset = 500
             for i, option in enumerate(battle_options):
                 color = (255, 0, 0) if i == selected_option else (0, 0, 0)
                 option_text = font.render(option, True, color)
@@ -538,7 +550,7 @@ while running:
                             reset()
         elif in_attack:# Display moveset options
             moves = player_pokemon.moveset
-            y_offset = 300
+            y_offset = 500
             for i, move in enumerate(moves):
                 color = (255, 0, 0) if i == selected_move else (0, 0, 0)
                 move_text = font.render(move, True, color)
@@ -690,9 +702,3 @@ while running:
     clock.tick(60)
 
 pygame.quit()
-
-'''
-to do list
-losing battle action
-graphics
-'''
