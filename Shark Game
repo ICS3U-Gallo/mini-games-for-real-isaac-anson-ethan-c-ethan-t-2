@@ -36,7 +36,7 @@ poisonfish_positions = []
 shark_x = 100
 shark_y = 100
 
-# Score Display Font
+# Score and Lives Display Font
 font = pygame.font.SysFont("RussoOne", 30)
 
 # Function to draw a regular fish
@@ -57,8 +57,7 @@ def poison_fish(x, y):
 
 # Function to generate a new random position for a fish, avoiding the shark's initial position
 def generate_new_fish(avoid_shark=True):
-    # Define a "safe zone" around the shark's starting position to avoid overlap
-    safe_zone = 150  # This will prevent the fish from spawning too close to the shark
+    safe_zone = 150 
     while True:
         x = random.randint(20, WIDTH - 100)
         y = random.randint(20, HEIGHT - 50)
@@ -88,10 +87,11 @@ def game_over_screen():
 
 # Function to reset the game
 def reset_game():
-    global shark_x, shark_y, Score, fish_positions, poisonfish_positions
+    global shark_x, shark_y, Score, Lives, fish_positions, poisonfish_positions
     shark_x = 100
     shark_y = 100
     Score = 0
+    Lives = 3  
     fish_positions = []
     poisonfish_positions = []
 
@@ -105,11 +105,11 @@ def reset_game():
 # ---------------------------
 # Main game loop
 def game_loop():
-    global shark_x, shark_y, Score, fish_positions, poisonfish_positions
+    global shark_x, shark_y, Score, Lives, fish_positions, poisonfish_positions
     running = True
     game_over = False
 
-    # Shark movement speed and direction
+    # Shark speed and direction
     shark_speed = 10
     x1_change = shark_speed
     y1_change = 0
@@ -139,17 +139,17 @@ def game_loop():
         shark_x += x1_change
         shark_y += y1_change
 
-        # Check for collision with any regular fish
+        # Shark eating fish
         for fish_x, fish_y in fish_positions[:]:
             distance = math.sqrt((shark_x - fish_x) ** 2 + (shark_y - fish_y) ** 2)
             if distance < 200:  # Collision with regular fish
                 Score += 10
                 fish_positions.remove((fish_x, fish_y))  # Remove fish
-                shark_speed += 0.1
+                shark_speed += 1
                 fish_positions.append(generate_new_fish())  # Add a new fish in a random position
                 break  
 
-        # Check for collision with poison fish
+        # Shark eats a poison fish
         for poison_x, poison_y in poisonfish_positions[:]:
             distance = math.sqrt((shark_x - poison_x) ** 2 + (shark_y - poison_y) ** 2)
             if distance < 100:  # Collision with poison fish
@@ -158,20 +158,16 @@ def game_loop():
                 poisonfish_positions.append(generate_new_fish(avoid_shark=True))  # Add a new poison fish in a random position
                 break
             
-
-        # Check if the score drops below 0
-        if Score < 0:
-            game_over = True
-
+        # End the game if all lives are lost
         if Lives == 0:
             game_over = True
 
-        # Check if the shark hits the border
+        # End the game if the shark hits the border
         if shark_x < 0 or shark_x + 200 > WIDTH or shark_y < 0 or shark_y + 70 > HEIGHT:
             game_over = True  
 
-        # Update Score
-        score_text = f"Score: {Score}"
+        # Update Score and Lives display
+        score_text = f"Score: {Score}  Lives: {Lives}"
         text_surface = font.render(score_text, True, BLACK)
         text_rect = text_surface.get_rect(center=(WIDTH // 2, 30))
 
@@ -191,7 +187,7 @@ def game_loop():
         for pos in poisonfish_positions:
             poison_fish(pos[0], pos[1])
 
-        # Display the score
+        # Display the score and lives
         screen.blit(text_surface, text_rect)
 
         # Game over display
