@@ -1,119 +1,148 @@
 import pygame
+import random
 
 pygame.init()
-pygame.font.init()
 
-WIDTH = 640
-HEIGHT = 480
-SIZE = (WIDTH, HEIGHT)
+WIDTH, HEIGHT = 600, 700
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Flappy Bird")
 
-screen = pygame.display.set_mode(SIZE)
+background_image = pygame.image.load("background.png")
+background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
+
+bird_image = pygame.image.load("bird.png")
+bird_image = pygame.transform.scale(bird_image, (40, 30))
+
+pipe_image = pygame.image.load("pipe.png").convert_alpha()
+pipe_image = pygame.transform.scale(pipe_image, (80, HEIGHT))
+
+BIRD_WIDTH, BIRD_HEIGHT = 40, 30
+GRAVITY = 0.8
+JUMP_STRENGTH = -12
+bird_y_velocity = 0
+bird_rect = pygame.Rect(50, HEIGHT // 2, BIRD_WIDTH, BIRD_HEIGHT)
+
+PIPE_WIDTH = 80
+PIPE_GAP = 200
+pipe_speed = 4
+pipes = []
+
 clock = pygame.time.Clock()
+font = pygame.font.SysFont(None, 36)
+score = 0
+game_started = False
+game_over = False
 
-background_color = (136, 194, 219)
-ground_color = (34, 139, 34)
-ground_height = 100
+def create_pipe():
+    gap_y = random.randint(100, HEIGHT - PIPE_GAP - 100)
+    top_pipe = pygame.Rect(WIDTH, 0, PIPE_WIDTH, gap_y)
+    bottom_pipe = pygame.Rect(WIDTH, gap_y + PIPE_GAP, PIPE_WIDTH, HEIGHT - gap_y - PIPE_GAP)
+    return top_pipe, bottom_pipe
 
-white = (255, 255, 255)
-black = (0, 0, 0)
-brown = (139, 69, 19)
-light_brown = (205, 133, 63)
-red = (255, 0, 0)
-blue = (192, 245, 239)
-bluer = (56, 66, 205)
-green = (30, 104, 30)
-sky_blue = (135, 206, 235)
+def draw_bird():
+    screen.blit(bird_image, bird_rect)
 
-bird1_x = -50
-bird1_y = 100
-bird2_x = -150  
-bird2_y = 120
-bird3_x = -250  
-bird3_y = 140
-bird_speed = 5  
+def draw_pipes():
+    for pipe in pipes:
+        if pipe.top == 0:
+            pipe_height = pipe.height
+            top_pipe_image = pygame.transform.scale(pipe_image, (PIPE_WIDTH, pipe_height))
+            top_pipe_image = pygame.transform.rotate(top_pipe_image, 180)
+            screen.blit(top_pipe_image, (pipe.x, pipe.y))
+        else:
+            pipe_height = pipe.height
+            bottom_pipe_image = pygame.transform.scale(pipe_image, (PIPE_WIDTH, pipe_height))
+            screen.blit(bottom_pipe_image, (pipe.x, pipe.y))
 
-def draw_cloud(screen, x, y):
-    pygame.draw.circle(screen, white, (x, y), 30)
-    pygame.draw.circle(screen, white, (x + 30, y), 40)
-    pygame.draw.circle(screen, white, (x + 60, y), 30)
-    pygame.draw.circle(screen, white, (x + 20, y - 20), 25)
-    pygame.draw.circle(screen, white, (x + 45, y - 20), 25)
+def check_collision():
+    for pipe in pipes:
+        if bird_rect.colliderect(pipe):
+            return True
+    if bird_rect.top <= 0 or bird_rect.bottom >= HEIGHT:
+        return True
+    return False
 
-def draw_tree(screen, x, y):
-    trunk_width = 20
-    trunk_height = 60
-    pygame.draw.rect(screen, brown, (x, y, trunk_width, trunk_height))
-    pygame.draw.circle(screen, green, (x + 10, y - 20), 30)
-    pygame.draw.circle(screen, green, (x - 20, y - 10), 25)
-    pygame.draw.circle(screen, green, (x + 40, y - 10), 25)
-    pygame.draw.circle(screen, green, (x + 10, y - 40), 25)
+def show_death_screen():
+    global score
+    death_text = font.render("You Died", True, (0, 0, 0))
+    score_text = font.render(f"Score: {score}", True, (0, 0, 0))
 
-def draw_bird_v(screen, x, y, size=20):
-    left_wing = [(x, y), (x - size, y - size), (x, y - size // 2)]
-    right_wing = [(x, y), (x + size, y - size), (x, y - size // 2)]
-    pygame.draw.polygon(screen, black, left_wing)
-    pygame.draw.polygon(screen, black, right_wing)
+    screen.blit(background_image, (0, 0))
+
+    death_text_rect = death_text.get_rect(center=(WIDTH // 2, HEIGHT // 3))
+    score_text_rect = score_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+
+    screen.blit(death_text, death_text_rect)
+    screen.blit(score_text, score_text_rect)
+
+    pygame.display.flip()
 
 running = True
 while running:
+    screen.blit(background_image, (0, 0))
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
-    bird1_x += bird_speed
-    bird2_x += bird_speed
-    bird3_x += bird_speed
+        if not game_started and not game_over and event.type == pygame.MOUSEBUTTONDOWN:
+            game_started = True
+            bird_y_velocity = 0
+            pipes.clear()
+            pipes.extend(create_pipe())
+            score = 0
 
-    if bird1_x > WIDTH:
-        bird1_x = -50
-    if bird2_x > WIDTH:
-        bird2_x = -50
-    if bird3_x > WIDTH:
-        bird3_x = -50
+        elif game_started and event.type == pygame.MOUSEBUTTONDOWN:
+            bird_y_velocity = JUMP_STRENGTH
 
-    screen.fill(background_color)
-    pygame.draw.rect(screen, (106, 181, 106), (0, 300, 640, 100))
-    pygame.draw.rect(screen, ground_color, (0, 350, 640, 150))
+        elif game_over and event.type == pygame.MOUSEBUTTONDOWN:
+            pass
 
-    draw_cloud(screen, 30, 40)
-    draw_cloud(screen, 270, 60)
-    draw_cloud(screen, 550, 50)
-    draw_cloud(screen, 400, 100)
-    draw_cloud(screen, 170, 120)
+    if not game_started and not game_over:
+        bird_rect.y = HEIGHT // 2
+        draw_bird()
 
-    draw_tree(screen, 100, HEIGHT - ground_height - 60)
-    draw_tree(screen, 300, HEIGHT - ground_height - 60)
-    draw_tree(screen, 500, HEIGHT - ground_height - 60)
+        if not pipes:
+            pipes.extend(create_pipe())
+        draw_pipes()
 
-    house_x, house_y = 150, 300
-    house_width, house_height = 100, 75
-    pygame.draw.rect(screen, light_brown, (house_x, house_y, house_width, house_height))
-    roof_points = [(house_x, house_y), (house_x + house_width, house_y), (house_x + house_width // 2, house_y - 50)]
-    pygame.draw.polygon(screen, bluer, roof_points)
-    door_x, door_y = house_x + house_width // 2 - 12, house_y + house_height - 30
-    door_width, door_height = 25, 30
-    pygame.draw.rect(screen, brown, (door_x, door_y, door_width, door_height))
-    window_size = 20
-    pygame.draw.rect(screen, blue, (house_x + 10, house_y + 10, window_size, window_size))
-    pygame.draw.rect(screen, blue, (house_x + house_width - 30, house_y + 10, window_size, window_size))
+        title_text = font.render("Welcome to Flappy Bird!", True, (0, 0, 0))
+        instructions_text = font.render("Click to Start", True, (0, 0, 0))
 
-    house_x, house_y = 300, 300
-    house_width, house_height = 200, 150
-    pygame.draw.rect(screen, light_brown, (house_x, house_y, house_width, house_height))
-    roof_points = [(house_x, house_y), (house_x + house_width, house_y), (house_x + house_width // 2, house_y - 100)]
-    pygame.draw.polygon(screen, red, roof_points)
-    door_x, door_y = house_x + house_width // 2 - 25, house_y + house_height - 60
-    door_width, door_height = 50, 60
-    pygame.draw.rect(screen, brown, (door_x, door_y, door_width, door_height))
-    window_size = 40
-    pygame.draw.rect(screen, blue, (house_x + 20, house_y + 20, window_size, window_size))
-    pygame.draw.rect(screen, blue, (house_x + house_width - 60, house_y + 20, window_size, window_size))
+        title_text_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 3))
+        instructions_text_rect = instructions_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
 
-    draw_bird_v(screen, bird1_x, bird1_y, size=20)
-    draw_bird_v(screen, bird2_x, bird2_y, size=20)
-    draw_bird_v(screen, bird3_x, bird3_y, size=20)
+        screen.blit(title_text, title_text_rect)
+        screen.blit(instructions_text, instructions_text_rect)
+
+    elif game_started:
+        bird_y_velocity += GRAVITY
+        bird_rect.y += int(bird_y_velocity)
+
+        for pipe in pipes:
+            pipe.x -= pipe_speed
+
+        pipes = [pipe for pipe in pipes if pipe.right > 0]
+
+        if pipes and pipes[0].right < bird_rect.left:
+            score += 1
+            pipes = pipes[2:]
+            pipes.extend(create_pipe())
+
+        draw_bird()
+        draw_pipes()
+
+        score_text = font.render(f"Score: {score}", True, (0, 0, 0))
+        screen.blit(score_text, (10, 10))
+
+        if check_collision():
+            game_over = True
+            pipes.clear()
+
+    if game_over:
+        show_death_screen()
 
     pygame.display.flip()
-    clock.tick(30)
+    clock.tick(60)
 
 pygame.quit()
